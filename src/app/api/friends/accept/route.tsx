@@ -1,6 +1,8 @@
 import { db } from "@/db/db";
 import { fetchRedis } from "@/helpers/redis";
 import { authOptions } from "@/lib/authOptions";
+import { pusherServer } from "@/lib/pusher";
+import { toPusherKey } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -41,13 +43,11 @@ export async function POST(req: Request) {
       return NextResponse.json("Invalid Friend Request", { status: 400 });
     }
 
+    pusherServer.trigger(toPusherKey(`user:${IdToAdd}:friends`), "new_friend",'');
+
     await db.sadd(`user:${session.user.id}:friends`, IdToAdd);
     await db.sadd(`user:${IdToAdd}:friends`, session.user.id);
-
-    // await db.srem(`user:${IdToAdd}:incoming_friend_requests`, session.user.id);
-
     await db.srem(`user:${session.user.id}:incoming_friend_requests`, IdToAdd);
-    // await db.srem(`user:${session.user.id}`)
 
     return NextResponse.json("OK", { status: 200 });
   } catch (error) {

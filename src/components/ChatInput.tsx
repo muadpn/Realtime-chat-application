@@ -1,9 +1,10 @@
 "use client";
-import { FC, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import Button from "./ui/Button";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
 interface ChatInputProps {
   chatPartner: User;
   chatId: string;
@@ -13,8 +14,10 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  // const [Empty, setIsLoading] = useState<boolean>(false);
 
   const sendMessage = async () => {
+    if (!input) return;
     setIsLoading(true);
     try {
       await axios.post("/api/message/send", {
@@ -29,6 +32,7 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="border-t border-gray-200 px-4 pt-4 mb-2 sm:mb-0">
       <div
@@ -61,7 +65,13 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
 
         <div className="absolute right-0 bottom-0 flex justify-between py-2 pl-3 pr-2">
           <div className="flex-shrink-0">
-            <Button isLoading={isLoading} onClick={sendMessage} type="submit">
+            <Button
+              disabled={!input}
+              isLoading={isLoading}
+              onClick={sendMessage}
+              type="submit"
+              className={cn({ "bg-gray-500": !input })}
+            >
               Post
             </Button>
           </div>

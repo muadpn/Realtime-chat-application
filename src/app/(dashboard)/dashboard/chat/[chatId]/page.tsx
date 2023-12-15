@@ -1,13 +1,12 @@
 import ChatInput from "@/components/ChatInput";
 import Messages from "@/components/Messages";
-import { db } from "@/db/db";
+
 import { fetchRedis } from "@/helpers/redis";
 import { authOptions } from "@/lib/authOptions";
 import { messageArrayValidator } from "@/lib/validation/message";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { FC } from "react";
 
 interface PageProps {
   params: {
@@ -43,16 +42,14 @@ const Page = async ({ params }: PageProps) => {
   if (user.id !== userId1 && user.id !== userId2) notFound();
 
   const chatPartnerId = user.id === userId1 ? userId2 : userId1;
-  console.log(chatPartnerId);
+
   const chatPartnerRaw = (await fetchRedis(
     "get",
     `user:${chatPartnerId}`
   )) as string;
   const chatPartner = JSON.parse(chatPartnerRaw) as User;
-  console.log(chatPartner);
 
   const initialMessages = await getChatMessages(chatId);
-  console.log(initialMessages);
 
   return (
     <div className="flex-1 justify-between flex flex-col  h-full max-h-[calc(90vh-6rem)]">
