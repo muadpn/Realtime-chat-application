@@ -25,7 +25,7 @@ const sideBarOptions: SidebarOption[] = [
     Icon: "UserPlus",
   },
 ];
-// user:9d0a2383-2270-4291-8c5c-fada8306dbcc:incoming_friend_requests
+
 const Layout = async ({ children }: LayoutProps) => {
   const session = await getServerSession(authOptions);
   if (!session) notFound();

@@ -7,6 +7,9 @@ import { messageArrayValidator } from "@/lib/validation/message";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import loading from "./loading";
+import Loading from "./loading";
 
 interface PageProps {
   params: {
@@ -42,18 +45,21 @@ const Page = async ({ params }: PageProps) => {
   if (user.id !== userId1 && user.id !== userId2) notFound();
 
   const chatPartnerId = user.id === userId1 ? userId2 : userId1;
-
-  const chatPartnerRaw = (await fetchRedis(
+  const [chatPartnerRaw, initialMessages] = await Promise.all([
+    fetchRedis("get", `user:${chatPartnerId}`) as Promise<string>,
+    getChatMessages(chatId) as Promise<Message[]>,
+  ]);
+  const chatPartnersRaw = (await fetchRedis(
     "get",
     `user:${chatPartnerId}`
   )) as string;
+
   const chatPartner = JSON.parse(chatPartnerRaw) as User;
 
-  const initialMessages = await getChatMessages(chatId);
+  // const initialMessages = await getChatMessages(chatId);
 
   return (
     <div className="flex-1 justify-between flex flex-col  h-full max-h-[calc(90vh-6rem)]">
-      {/* {} */}
       <div className="flex sm:items-center justify-between py-3 border-b-2 border-gray-200 ">
         <div className="relative flex items-center space-x-4">
           <div className="relative">
@@ -77,14 +83,16 @@ const Page = async ({ params }: PageProps) => {
           </div>
         </div>
       </div>
-      <Messages
-        chatId={chatId}
-        chatPartner={chatPartner}
-        sessionImg={session.user.image}
-        initialMessages={initialMessages}
-        sessionId={session.user.id}
-      />
-      <ChatInput chatId={chatId} chatPartner={chatPartner} />
+      <Suspense fallback={<Loading />}>
+        <Messages
+          chatId={chatId}
+          chatPartner={chatPartner}
+          sessionImg={session.user.image}
+          initialMessages={initialMessages}
+          sessionId={session.user.id}
+        />
+        <ChatInput chatId={chatId} chatPartner={chatPartner} />
+      </Suspense>
     </div>
   );
 };

@@ -54,18 +54,18 @@ export async function POST(req: Request) {
         status: 400,
       });
     }
-    console.log("triggered");
 
-    await pusherServer.trigger(
-      toPusherKey(`user:${idToAdd}:incoming_friend_requests`),
-      "incoming_friend_requests",
-      {
-        senderId: session.user.id,
-        senderEmail: session.user.email,
-      }
-    );
-
-    db.sadd(`user:${idToAdd}:incoming_friend_requests`, session.user.id);
+    await Promise.all([
+      pusherServer.trigger(
+        toPusherKey(`user:${idToAdd}:incoming_friend_requests`),
+        "incoming_friend_requests",
+        {
+          senderId: session.user.id,
+          senderEmail: session.user.email,
+        }
+      ),
+      db.sadd(`user:${idToAdd}:incoming_friend_requests`, session.user.id),
+    ]);
 
     return NextResponse.json("OK", { status: 200 });
   } catch (error) {

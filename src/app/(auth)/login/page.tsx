@@ -4,7 +4,8 @@ import Button from "@/components/ui/Button";
 import { signIn } from "next-auth/react";
 import { FC, useState } from "react";
 import toast from "react-hot-toast";
-
+import Logo from "@/assets/Logo.png";
+import Image from "next/image";
 interface pageProps {}
 
 const Page: FC<pageProps> = ({}) => {
@@ -26,7 +27,12 @@ const Page: FC<pageProps> = ({}) => {
       <div className="w-full flex flex-col items-center max-w-md space-y-8">
         <div>
           <div className="flex flex-col items-center gap-8">
-            Logo
+            <Image
+              src={Logo}
+              height={200}
+              width={250}
+              alt="Realtime Chat application Logo"
+            />
             <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-">
               Sign in to your Account
             </h2>

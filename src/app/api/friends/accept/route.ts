@@ -43,11 +43,29 @@ export async function POST(req: Request) {
       return NextResponse.json("Invalid Friend Request", { status: 400 });
     }
 
-    pusherServer.trigger(toPusherKey(`user:${IdToAdd}:friends`), "new_friend",'');
+    const [userRaw, friendRaw] = (await Promise.all([
+      fetchRedis(`get`, `user:${session.user.id}`),
+      fetchRedis(`get`, `user:${IdToAdd}`),
+    ])) as [string, string];
 
-    await db.sadd(`user:${session.user.id}:friends`, IdToAdd);
-    await db.sadd(`user:${IdToAdd}:friends`, session.user.id);
-    await db.srem(`user:${session.user.id}:incoming_friend_requests`, IdToAdd);
+    const user = JSON.parse(userRaw);
+    const friend = JSON.parse(friendRaw);
+
+    await Promise.all([
+      pusherServer.trigger(
+        toPusherKey(`user:${IdToAdd}:friends`),
+        "new_friend",
+        user
+      ),
+      pusherServer.trigger(
+        toPusherKey(`user:${session.user.id}:friends`),
+        "new_friend",
+        friend
+      ),
+      db.sadd(`user:${session.user.id}:friends`, IdToAdd),
+      db.sadd(`user:${IdToAdd}:friends`, session.user.id),
+      db.srem(`user:${session.user.id}:incoming_friend_requests`, IdToAdd),
+    ]);
 
     return NextResponse.json("OK", { status: 200 });
   } catch (error) {

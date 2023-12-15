@@ -1,5 +1,7 @@
 import { db } from "@/db/db";
 import { authOptions } from "@/lib/authOptions";
+import { pusherServer } from "@/lib/pusher";
+import { toPusherKey } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -13,8 +15,15 @@ export async function POST(req: Request) {
     }
     const { id: IdToDeny } = z.object({ id: z.string() }).parse(body);
 
-    await db.srem(`user:${session.user.id}:incoming_friend_requests`, IdToDeny);
-    await db.srem(`user:${IdToDeny}:incoming_friend_requests`, session.user.id);
+    Promise.all([
+      pusherServer.trigger(
+        toPusherKey(`user:${session.user.id}:friends`),
+        "deny_user",
+        {}
+      ),
+      db.srem(`user:${session.user.id}:incoming_friend_requests`, IdToDeny),
+      db.srem(`user:${IdToDeny}:incoming_friend_requests`, session.user.id),
+    ]);
 
     return NextResponse.json("OK", { status: 200 });
   } catch (error) {
