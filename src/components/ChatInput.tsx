@@ -47,6 +47,7 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
               sendMessage();
             }
           }}
+          disabled={isLoading}
           rows={1}
           value={input}
           onChange={(e) => setInput(e.target.value)}
